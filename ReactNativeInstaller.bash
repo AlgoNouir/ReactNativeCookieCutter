@@ -63,6 +63,7 @@ echo "installing nativewind ..."
 # install tailwind
 npm install nativewind
 npm install --dev tailwindcss
+npm install --dev prettier prettier-plugin-tailwindcss
 npx tailwindcss init
 
 
@@ -84,6 +85,10 @@ module.exports = {
         text: "#3C414A",
         border: "#3C414A99",
         notification: "#AEBC4A",
+        error: "#C4716C",
+        success: "#AEBC4A",
+        info: "#3A5290",
+        warning:"#E7B10A",
     
         white: "#FFF",
         black: "#000",
