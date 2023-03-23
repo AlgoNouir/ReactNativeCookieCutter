@@ -37,12 +37,17 @@ mkdir pages
 
 # create home file
 cat > "./pages/home.tsx" <<- EOM
+// base
 import * as React from "react";
+
+// types
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { pagesType } from "../App";
+
+// components
 import { View, Text } from "react-native";
 
-export interface HomeProps {}
-
-export default function Home(props: HomeProps) {
+export default function Home(props: NativeStackScreenProps<pagesType, "home">) {
     return (
         <View className="w-screen h-screen items-center justify-center">
             <Text>your app is ready !!!</Text>
@@ -86,7 +91,7 @@ module.exports = {
         border: "#3C414A99",
         notification: "#AEBC4A",
         error: "#C4716C",
-        success: "#AEBC4A",
+        success: "#1DC322",
         info: "#3A5290",
         warning:"#E7B10A",
     
@@ -185,7 +190,11 @@ import { Provider } from 'react-redux';
 // pages
 import HomePage from "./pages/home"
 
-const {Navigator, Screen} = createNativeStackNavigator();
+export type pagesType = {
+    home: undefined;
+};
+
+const {Navigator, Screen} = createNativeStackNavigator<pagesType>();
 
 export default function App() {
   return (
