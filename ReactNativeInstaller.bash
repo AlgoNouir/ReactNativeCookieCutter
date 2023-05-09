@@ -69,7 +69,7 @@ import { pagesType } from "./config";
 
 
 // pages
-import HomePage from "./mainPage";
+import HomePage from "./home";
 
 const { Navigator, Screen, Group } = createNativeStackNavigator<pagesType>();
 
