@@ -56,8 +56,75 @@ export default function Home(props: NativeStackScreenProps<pagesType, "home">) {
 }
 EOM
 
+cat > "./pages/config.ts" <<- EOM
+export type pagesType = {
+    home: undefined;
+};
+EOM
+
+cat > "./pages/index.tsx" <<- EOM
+// base
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { pagesType } from "./config";
+
+
+// pages
+import HomePage from "./mainPage";
+
+const { Navigator, Screen, Group } = createNativeStackNavigator<pagesType>();
+
+export default function Pages() {
+    return (
+        <Navigator>
+          <Screen
+            name="home"
+            component={HomePage} 
+          />
+        </Navigator>
+    );
+}
+EOM
+
 
 mkdir components
+cat > "./components/UI.ts" <<- EOM
+import {
+    Text,
+    TextProps,
+    TextInput,
+    TextInputProps,
+    TouchableOpacity,
+    TouchableOpacityProps,
+} from "react-native";
+
+export function Button(props: TouchableOpacityProps) {
+    return (
+        <TouchableOpacity
+            activeOpacity={0.6}
+            className={props.className}
+            {...props}
+        />
+    );
+}
+
+export function Label(props: TextProps) {
+    return (
+        <Text className={props.className + " font-main"} {...props}>
+            {props.children}
+        </Text>
+    );
+}
+export function Input(props: TextInputProps) {
+    return (
+        <TextInput
+            {...props}
+            className={props.className + " rounded-xl bg-bg-200 p-2 font-main"}
+        >
+            {props.children}
+        </TextInput>
+    );
+}
+EOM
 
 # --------------------------------+
 #   install and config tailwind   |
@@ -82,14 +149,15 @@ module.exports = {
     './components/**/*.{js,jsx,ts,tsx}'
   ],
   theme: {
+    fontFamily: {
+        main: "Vazirmatn_500Medium",
+    },
     colors: {
-        primary: "#EDEDED",
-        secondary: "#3C414A",
-        background: "#EDEDED",
-        card: "#FFF",
-        text: "#3C414A",
-        border: "#3C414A99",
-        notification: "#AEBC4A",
+        prime:{100:"#EDEDED", 200:"#EDEDED", 300:"#EDEDED"},
+        bg:{100:"#EDEDED", 200:"#EDEDED", 300:"#EDEDED"},
+        accent:{100:"#EDEDED", 200:"#EDEDED",},
+        text:{100:"#EDEDED", 200:"#EDEDED",},
+        
         error: "#C4716C",
         success: "#1DC322",
         info: "#3A5290",
@@ -98,7 +166,7 @@ module.exports = {
         white: "#FFF",
         black: "#000",
         red: "#C4716C",
-        green: "#AEBC4A",
+        green: "#1DC322",
         blue: "#3A5290",
     },
   },
@@ -129,44 +197,63 @@ npm install @reduxjs/toolkit react-redux
 
 # create file
 mkdir store
-cat > "./store/store.ts" <<- EOM
-import {
-  Action,
-  configureStore,
-  ThunkAction,
-} from '@reduxjs/toolkit';
+cd store || exit
+cat > "./store.ts" <<- EOM
+import { Action, configureStore, ThunkAction } from "@reduxjs/toolkit";
+import user from "./user/slice"
 
 export const store = configureStore({
-  reducer: {
-// This is where we add reducers.
-// Since we don't have any yet, leave this empty
-  },
+    reducer: {
+      user
+    },
 });
 
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof store.getState>;
 export type AppThunk<ReturnType = void> = ThunkAction<
-   ReturnType,
-   RootState,
-   unknown,
-   Action<string>
- >;
+    ReturnType,
+    RootState,
+    unknown,
+    Action<string>
+>;
 EOM
 
-cat > "./store/HOCs.ts" <<- EOM
-import {
-  TypedUseSelectorHook,
-  useDispatch,
-  useSelector,
-} from 'react-redux';
-import type {
-  AppDispatch,
-  RootState,
-} from './store';
+cat > "./HOCs.ts" <<- EOM
+import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "./store";
 
 export const useAppDispatch = () => useDispatch<AppDispatch>();
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 EOM
+
+
+mkdir user
+cat > "./user/slice.ts" <<- EOM
+import { createSlice } from "@reduxjs/toolkit";
+
+export interface UserType {
+    name: string;
+}
+const initialState: {
+    login: "accepted" | "rejected" | "pending" | "onLogin";
+    account: UserType;
+} = {
+    login: "accepted",
+    account: {
+        name: "مهدی نوری",
+    },
+};
+
+const userSlice = createSlice({
+    name: "userSlice",
+    initialState,
+    reducers: {},
+});
+
+export default userSlice.reducer;
+EOM
+
+cd ..
 
 echoLog "✅ redux install done"
 
@@ -177,38 +264,56 @@ echoLog "✅ redux install done"
 echo "installing the navigations ..."
 npm install @react-navigation/native @react-navigation/native-stack
 npx expo install react-native-screens react-native-safe-area-context
-
+npx expo install @expo-google-fonts/vazirmatn expo-splash-screen expo-font
 # set app navigations to home page
 cat > "./App.tsx" <<- EOM
 // base
-import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {colors} from "./core"
+import { NavigationContainer } from "@react-navigation/native";
+import { Provider } from "react-redux";
 import { store } from "./store/store";
-import { Provider } from 'react-redux';
-
-// pages
-import HomePage from "./pages/home"
-
-export type pagesType = {
-    home: undefined;
-};
-
-const {Navigator, Screen} = createNativeStackNavigator<pagesType>();
+import { Vazirmatn_500Medium } from "@expo-google-fonts/vazirmatn";
+import { useCallback, useEffect, useState } from "react";
+import * as SplashScreen from "expo-splash-screen";
+import * as Font from "expo-font";
+import Pages from "./pages";
 
 export default function App() {
-  return (
-    <Provider store={store}>
-      <NavigationContainer theme={{ ...DefaultTheme, colors }}>
-        <Navigator>
-          <Screen
-            name="home"
-            component={HomePage} />
-        </Navigator>
-      </NavigationContainer>
-    </Provider>
-  );
+    const [appIsReady, setAppIsReady] = useState(false);
+
+    useEffect(() => {
+        async function prepare() {
+            try {
+                await Font.loadAsync({
+                    Vazirmatn_500Medium,
+                });
+            } catch (e) {
+                console.warn(e);
+            } finally {
+                // Tell the application to render
+                setAppIsReady(true);
+            }
+        }
+
+        prepare();
+    }, []);
+    const onLayoutRootView = useCallback(async () => {
+        if (appIsReady) {
+            await SplashScreen.hideAsync();
+        }
+    }, [appIsReady]);
+
+    if (!appIsReady) {
+        return null;
+    }
+    return (
+        <Provider store={store}>
+            <NavigationContainer onReady={onLayoutRootView}>
+                <Pages />
+            </NavigationContainer>
+        </Provider>
+    );
 }
+
 EOM
 
 echoLog "✅ navigation install done"
