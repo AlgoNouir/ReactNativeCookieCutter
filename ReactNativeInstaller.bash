@@ -42,7 +42,7 @@ import * as React from "react";
 
 // types
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { pagesType } from "../App";
+import { pagesType } from "./config";
 
 // components
 import { View, Text } from "react-native";
