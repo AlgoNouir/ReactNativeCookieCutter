@@ -32,6 +32,16 @@ echoLog "✅ $appName install done"
 #         create home page        |
 # --------------------------------+
 
+cat > "./babel.config.js" <<- EOM
+module.exports = function(api) {
+  api.cache(true);
+  return {plugins: ['nativewind/babel'],
+    presets: ['babel-preset-expo'],
+    plugins: ["nativewind/babel"],
+  };
+};
+EOM
+
 # create page folder
 mkdir pages
 
@@ -87,7 +97,7 @@ EOM
 
 
 mkdir components
-cat > "./components/UI.ts" <<- EOM
+cat > "./components/UI.tsx" <<- EOM
 import {
     Text,
     TextProps,
